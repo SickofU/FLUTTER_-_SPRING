@@ -1,0 +1,26 @@
+
+spring:
+  application:
+    name: demo4
+
+  profiles:
+    include: aws
+
+  datasource:
+    url: jdbc:mariadb://localhost:3306/bootdb2
+    username: bootdb2user
+    password: hb030109**
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+  servlet:
+    multipart:
+      max-file-size: 1000MB
+      max-request-size: 1000MB
