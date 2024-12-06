@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
+import 'dart:io'; // dart:io 패키지 추가
 
 class CalendarTab extends StatefulWidget {
   const CalendarTab({super.key});
@@ -11,9 +14,26 @@ class CalendarTab extends StatefulWidget {
 
 class _CalendarTabState extends State<CalendarTab> {
   DateTime selectedDate = DateTime.now();
-  DateTime focusedDate = DateTime(2024, 10, 1);
+  DateTime focusedDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   XFile? _uploadedImage;
   final TextEditingController _textController = TextEditingController();
+  final String baseUrl = "http://localhost:8080/api/v1/calendar";
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  String? token;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    final storedToken = await storage.read(key: 'access_token');
+    setState(() {
+      token = storedToken;
+    });
+  }
 
   void _changeMonth(int offset) {
     setState(() {
@@ -23,6 +43,59 @@ class _CalendarTabState extends State<CalendarTab> {
         1,
       );
     });
+  }
+
+  Future<void> _uploadData({String? imagePath, String text = ""}) async {
+    if (token == null) {
+      print("JWT token is missing");
+      return;
+    }
+
+    print("Loaded token: $token"); // 디버깅 추가
+    print("Selected Date: ${selectedDate.toIso8601String()}");
+
+    final formattedDate = DateFormat('yyyyMMdd').format(selectedDate);
+    final uri = Uri.parse("$baseUrl/upload/$formattedDate");
+    print("Sending request to: $uri"); // 디버깅 추가
+
+    // Create a Multipart Request
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..headers['Content-Type'] = 'multipart/form-data'
+      ..fields['text'] = text;
+
+    // Add the image file
+    if (_uploadedImage != null && imagePath != null) {
+      try {
+        request.files.add(await http.MultipartFile.fromPath(
+          'imageFile', // 서버에서 사용하는 파라미터 이름
+          imagePath,
+        ));
+        print("File uploaded: $imagePath");
+      } catch (e) {
+        print("Error adding file: $e");
+        return;
+      }
+    } else {
+      print("No image file selected");
+    }
+
+    // Send the request
+    try {
+      final response = await request.send();
+      print("Response status: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("Upload successful");
+        final responseBody = await response.stream.bytesToString();
+        print("Server Response: $responseBody");
+      } else {
+        print("Upload failed: ${response.statusCode}");
+        final responseBody = await response.stream.bytesToString();
+        print("Error Response: $responseBody");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
   }
 
   void _showUploadModal(BuildContext context) {
@@ -44,6 +117,7 @@ class _CalendarTabState extends State<CalendarTab> {
                   setState(() {
                     _uploadedImage = image;
                   });
+                  await _uploadData(imagePath: image.path);
                 }
                 Navigator.pop(context);
               },
@@ -85,8 +159,8 @@ class _CalendarTabState extends State<CalendarTab> {
                 ),
                 const SizedBox(height: 16),
                 CupertinoButton.filled(
-                  onPressed: () {
-                    print('저장된 텍스트: ${_textController.text}');
+                  onPressed: () async {
+                    await _uploadData(text: _textController.text);
                     Navigator.pop(context);
                   },
                   child: const Text('저장'),
@@ -101,9 +175,9 @@ class _CalendarTabState extends State<CalendarTab> {
 
   @override
   Widget build(BuildContext context) {
-    const double fontSize = 14; // 텍스트 크기
-    const double popupWidth = 300; // 팝업 너비
-    const double popupHeight = 350; // 팝업 높이
+    const double fontSize = 14;
+    const double popupWidth = 300;
+    const double popupHeight = 350;
 
     return CupertinoPageScaffold(
       child: Center(
@@ -124,7 +198,6 @@ class _CalendarTabState extends State<CalendarTab> {
           ),
           child: Column(
             children: [
-              // 캘린더 헤더
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -147,8 +220,6 @@ class _CalendarTabState extends State<CalendarTab> {
                   ),
                 ],
               ),
-
-              // 요일 표시
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(
@@ -166,8 +237,6 @@ class _CalendarTabState extends State<CalendarTab> {
                   ],
                 ),
               ),
-
-              // 날짜
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -179,7 +248,7 @@ class _CalendarTabState extends State<CalendarTab> {
                     focusedDate.year,
                     focusedDate.month + 1,
                     0,
-                  ).day, // 해당 월의 총 일수
+                  ).day,
                   itemBuilder: (BuildContext context, int index) {
                     final date = DateTime(
                         focusedDate.year, focusedDate.month, index + 1);
