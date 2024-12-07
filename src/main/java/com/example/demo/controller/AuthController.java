@@ -66,19 +66,15 @@ public class AuthController {
                 .build();
 
         userRepository.save(user);
-
+        log.info("멤버 객체 생성 ");
         // 친구 이름이 제공된 경우 친구 관계 설정
         if (request.getFriendName() != null && !request.getFriendName().isEmpty()) {
             Optional<Member> friendOptional = userRepository.findByUsername(request.getFriendName());
             if (friendOptional.isPresent()) {
                 Member friend = friendOptional.get();
 
-                // 양방향 친구 관계 설정
+                // 친구 관계 설정
                 user.setFriend(friend);
-                friend.setFriend(user);
-
-                userRepository.save(user);  // 저장 시 양방향 매핑 반영
-                userRepository.save(friend);
 
                 log.info("친구 관계 설정됨: {} <-> {}", user.getUsername(), friend.getUsername());
             } else {

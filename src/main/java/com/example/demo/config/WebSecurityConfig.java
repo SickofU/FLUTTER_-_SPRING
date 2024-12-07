@@ -65,6 +65,8 @@ public class WebSecurityConfig
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/", "/api/v1/login", "/api/v1/register").permitAll()
                         .requestMatchers("/api/v1/calendar/**").authenticated()
+                        .requestMatchers("/api/v1/album/**").authenticated()
+                        .requestMatchers("/api/v1/setting/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),

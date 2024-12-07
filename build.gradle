@@ -40,7 +40,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     // JAXB API
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
-
+// webSockt 구현
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     // JAXB Runtime
     implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
 }

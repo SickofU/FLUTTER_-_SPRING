@@ -56,6 +56,10 @@ public class Member implements UserDetails {
 
     private String friendName; // 친구 이름
 
+    private String Birthdate;
+
+    private String friendBirthdate;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "authorities", joinColumns = @JoinColumn(name = "member_id"))
     @Column(name = "authority")
@@ -65,7 +69,7 @@ public class Member implements UserDetails {
     @Column(nullable = true)
     private String refreshToken;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "friend_id")
     private Member friend; // 친구
 
@@ -75,11 +79,20 @@ public class Member implements UserDetails {
     // Getters and Setters
     public Long getId() { return id; }
 
+public void setBirthdate(String birthdate) {
+        this.Birthdate = birthdate;
+}
+public String getBirthdate() {
+        return Birthdate;
+}
+public void setFriendBirthdate(String friendBirthdate) {
+        this.friendBirthdate = friendBirthdate;
+}
     public void setId(Long id) { this.id = id; }
     public String getEmail() { return email; }
     public String getUsername() { return username; }
 
-    public void setUsername(String username) { this.username = username; }
+    public void setUsername(String username) {  }
 
     public String getPassword() { return password; }
 
@@ -92,11 +105,27 @@ public class Member implements UserDetails {
         this.refreshToken = refreshToken;
     }
 
-    public void setFriend(Member friend) { this.friend = friend; }
+    public void setFriend(Member friend) {
+        this.friend = friend;
+        if (friend != null && friend.getFriend() != this) {
+            friend.setFriend(this); // 양방향 관계 설정
+        }
+    }
     public void setFriendName(String friendName) { this.friendName = friendName; }
 public Long getFriendId(){
         return friend.getId();
 }
+    public void setFriendId(Long friendId) {
+        if (friend != null && friend.getId().equals(friendId)) {
+            return; // 이미 설정된 경우 무시
+        }
+
+        if (friend == null) {
+            this.friend = new Member(); // 새로운 친구 객체 생성
+        }
+
+        this.friend.setId(friendId); // 친구 ID 설정
+    }
     @Builder
     public Member(String username, String email, String password,List<String> authorities) {
         this.username = username;

@@ -29,8 +29,6 @@ public class CalendarService {
 
         // 이미지 업로드 및 URL 저장
         if (imageFile != null && !imageFile.isEmpty()) {
-            //upload 왜 안돼지
-// 친구데 대해서 저장하는거 기능 넣기
 
             String imageUrl = s3Uploader.upload(imageFile, member, "calendar");
             entry.setImageUrl(imageUrl); // Calendar 엔터티에 이미지 URL 저장

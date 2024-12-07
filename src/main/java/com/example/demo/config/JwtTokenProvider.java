@@ -90,11 +90,17 @@ public class JwtTokenProvider {
                 .parseClaimsJws(accessToken)
                 .getBody();
 
+        log.info("Token Claims: {}", claims);
         String email = claims.getSubject();
 
         // Member 객체 가져오기
         Member member = (Member) userDetailServiceImp.loadUserByUsername(email);
-
+        if(member == null){
+            log.error("Failed to load Member for email: {}",email);
+            return null;
+        }
+        log.info("Loaded Member: {}", member.getEmail());
+        // 여기 리턴값 널로 바꿈 원래 액세스토큰인데
         return new UsernamePasswordAuthenticationToken(member, accessToken, member.getAuthorities());
     }
 

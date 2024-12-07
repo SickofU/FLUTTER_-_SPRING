@@ -29,7 +29,7 @@ public class CalendarController {
 
 
 
-    @GetMapping("/upload/{date}")
+    @PostMapping("/upload/{date}")
     public ResponseEntity<?> uploadEntry(
             @RequestParam("text") String text,
             @PathVariable("date") String dateStr, // 날짜를 문자열로 받음

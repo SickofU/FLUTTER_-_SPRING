@@ -36,9 +36,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtTokenDto != null && jwtTokenDto.getAccessToken() != null) {
                 if (jwtTokenProvider.validateToken(jwtTokenDto.getAccessToken())) {
                     Authentication authentication = jwtTokenProvider.getAuthentication(jwtTokenDto.getAccessToken());
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.info("Authentication object: {}", authentication != null ? authentication.getName() : "null");
-
+                    if(authentication != null) {
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        log.info("Authentication object: {}", authentication != null ? authentication.getName() : "null");
+                    }
                 } else {
                     // 토큰 검증 실패 로깅
                     log.info("Invalid token received");
@@ -47,6 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (Exception e) {
+            // 여기문제가 잇음
             log.error("JWT Authentication error", e);
             // 에러 응답 처리
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

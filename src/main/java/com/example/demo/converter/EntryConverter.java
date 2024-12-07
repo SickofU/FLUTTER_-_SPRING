@@ -18,6 +18,7 @@ public class EntryConverter {
 
     public EntryDTO toDto(Calendar calendar) {
         return EntryDTO.builder()
+                .id(calendar.getId())
                 .date(calendar.getDate())
                 .text(calendar.getText())
                 .imageUrl(calendar.getImageUrl())
